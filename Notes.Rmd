@@ -1,0 +1,18 @@
+---
+title: "Notes, Max Kuhn Workshop"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+# Notes
+
+1. Ordinal data is handled poorly in R. Often transformed to polynomials. 
+2. Test sets
+  - Keep 25% of data as test set. Keep it pristine, and never use it other than for final testing. 
+  - Keep some data to calibrate your probabilities
+  - Once you get a good diverse set of data, you often don't gain much from additional data; it just adds computational time
+  - Don't be afraid to parse your data if you have lots of data, to use different well-mixed parts for different purposes, so that the final test set remains pristine. 
+  - FH thinks test sets are evil, and that you can do well using resampling on the training set. This is not necessarily true, or you can make resampling mistakes
+  - Set up protocols almost like a Kaggle competition, where the data splitting is done externally, and the modelers are blinded to it. This protects everyone from overfitting or generalization errors, by keeping things "fair"
+  
