@@ -1,18 +1,56 @@
 ---
 title: "Notes, Max Kuhn Workshop"
-output: html_notebook
+output: 
+  html_notebook:
+    theme: cerulean
 editor_options: 
   chunk_output_type: inline
 ---
 
-# Notes
+Live code is at [bit.ly/follow-max](http://bit.ly/follow-max).
+
 
 1. Ordinal data is handled poorly in R. Often transformed to polynomials. 
-2. Test sets
-  - Keep 25% of data as test set. Keep it pristine, and never use it other than for final testing. 
-  - Keep some data to calibrate your probabilities
-  - Once you get a good diverse set of data, you often don't gain much from additional data; it just adds computational time
-  - Don't be afraid to parse your data if you have lots of data, to use different well-mixed parts for different purposes, so that the final test set remains pristine. 
-  - FH thinks test sets are evil, and that you can do well using resampling on the training set. This is not necessarily true, or you can make resampling mistakes
-  - Set up protocols almost like a Kaggle competition, where the data splitting is done externally, and the modelers are blinded to it. This protects everyone from overfitting or generalization errors, by keeping things "fair"
+1. Test sets
+    - Keep 25% of data as test set. Keep it pristine, and never use it other than for final testing. 
+    - Keep some data to calibrate your probabilities
+    - Once you get a good diverse set of data, you often don't gain much from additional data; it just adds computational time
+    - Don't be afraid to parse your data if you have lots of data, to use different well-mixed parts for different purposes, so that the final test set remains pristine. 
+    - FH thinks test sets are evil, and that you can do well using resampling on the training set. This is not necessarily true, or you can make resampling mistakes
+    - Set up protocols almost like a Kaggle competition, where the data splitting is done externally, and the modelers are blinded to it. This protects everyone from overfitting or generalization errors, by keeping things "fair"
+
+1. Question: What do you do if you encounter a factor level you haven't seen before, so it isn't encoded in the factor yet?
+    - No good way uniformly
+
+1. Question: Can simple random sampling do better than stratified sampling? Typically, no. 
+
+1. Model performance
+    - Traditionally very manual process
+    - Residuals on training set can give you overly optimistic view of the model. 
+    - R^2^ is not great, partly due to the definition of correlation. You can have a poorly fitting model with great R^2^. So RMSE is probably a better metric to focus on since it is actually measuring the fit. 
+    - RMSE is more towards accuracy, not necessary good ranking, which is a lower bar to reach. Spearman's correlation might work better using actual ranks vs predicted ranks. 
+1. Cross-validation
+    - CV is noisy, in that the predictions bounce around more than some other resampling methods
+    - You can do repeated CV if the dataset is too small and your prediction data engine is small (as in, the leave-out part is small). This reduces variability, at the rate of $\sqrt{n}$. Usually 5-10 repeats works well. "10 works really well."
+    - If we do higher folds (like 100-fold), bias goes down but variance goes way up. So we're fighting the variance-bias tradeoff
+    - Monte Carlo CV (just randomly removing 10% each round, rather than keeping track) still works well. Apparently the round-robin nature of CV is what makes it so valuable.
+    - You can use the holdout residuals from the CV process as the performance metric of choice, since they are out-of-bag residuals. This is a single function in scikit-learn, but easy to program in R (see code on p. 34 of Part2 presentation)
   
+1. Bootstrap
+    - Bootstrap is pessimistic, in that performance metrics appear to be less good using bootstrap than repeated CV or other resampling methods. 
+
+1. K-NN models
+    - better modeling is by `kknn` package, rather than what's in `caret`. 
+1. R properties
+    1. R is really good at not making copies. So if I assign a dataset to a million different names, as long as I don't change it, it still points to the same original dataset.
+    
+## Feature Engineering
+
+1. Information leakage is really important to avoid. Do all operations in the training set and use those derived quantities in the test set. Don't re-calculate them in the test set. 
+1. For *ordinal variables*, you can create scores (e.g, 1,2, ..., 12 for months) that can be adequate. The default behavior in R is to create polynomial contrasts for these variables. This is a problem once number of levels of the variables gets large. 
+1. Low variance predictors: very low percentage of unique values and ratio of most frequent to next most frequent is high are indicative of low or near-zero variance variables. 
+1. *Effect encodings*: fit a linear model, and look at avg outcome per level; this is the encoding. There is a circularity here, and so there is also a chance of overfitting. Maybe doing this within resampling might get around the overfitting (do the encoding in the training set). This is implemented in the `embed` package. 
+1. The `recipes` package does a lot of the transformations and filters on variables, and doing feature engineering to create new variables. See [the reference](https://tidymodels.github.io/recipes/reference/index.html) for examples.
+1. In recipes, you can recycle old computations in the pipe, if you added more transformations. Adding `fresh = TRUE` as an option in `prep` forces a re-computation of the original transformations. 
+1. In `recipes`, `juice` creates the final data frame from the recipe.
+1. In `recipes`, `prep` returns a recipe with all the options (and default options) filled in. `bake/juice` creates a tibble. 
